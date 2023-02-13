@@ -280,54 +280,32 @@ int Kill(int pid) {
 //  - eventually that process transfers control
 //      via switch back to the scheduler.
 void scheduler(void) {
-// A continuous loop in real code
-//  if(first_sched) first_sched = 0;
-//  else sti();
-
-    /*curr_proc->state = RUNNABLE;
-    struct proc *p;
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p == curr_proc || p->state != RUNNABLE)
-            continue;
-        // Switch to chosen process.
-        curr_proc = p;
-        p->state = RUNNING;
-        break;
-    }
-    release(&ptable.lock);*/
-    //counter: used to track if we’ve found the winner yet
     curr_proc->state = RUNNABLE;
-    int counter = 0;
+
     acquire(&ptable.lock);
-    // winner: use some call to a random number generator to
-    // get a value, between 0 and the total # of tickets
     struct proc *p;
     int totaltickets = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         totaltickets = totaltickets + p->tickets;
     }
 
-    int winner = rand() % totaltickets;
+    int winner = rand() % (totaltickets + 1);
     printf("Winner: %d, total tickets: %d\n", winner, totaltickets);
 
-    // current: use this to walk through the list of jobs
-    struct proc *current = ptable.proc;
-
-    // for loop to walk through the array of processes
+    int counter = 0;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
         counter = counter + p->tickets;
         // if the current process is the winner, make it the running process
-        if (counter > winner && p->state == RUNNABLE) {
+        if (counter > winner) {
             curr_proc = p;
             p->state = RUNNING;
             break;
         }
         //if this is the last index, make this process the running one
-        /*if (p == &ptable.proc[NPROC - 1]) {
+        if (p == &ptable.proc[NPROC - 1]) {
             p->state = RUNNING;
             break;
-        }*/
+        }
     }
     release(&ptable.lock);
 }
