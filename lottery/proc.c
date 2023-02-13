@@ -9,10 +9,6 @@
 #include "types.h"
 #include "defs.h"
 #include "proc.h"
-#include <time.h>
-#include <sys/syscall.h>
-#include <linux/random.h>
-#include <unistd.h>
 
 
 //#define NUMTICKETS 10000
@@ -319,10 +315,10 @@ void scheduler(void) {
     struct proc *current = ptable.proc;
 
     // for loop to walk through the array of processes
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
         counter = counter + p->tickets;
         // if the current process is the winner, make it the running process
-        if (counter > winner) {
+        if (counter > winner && p->state == RUNNABLE) {
             curr_proc = p;
             p->state = RUNNING;
             break;
@@ -333,6 +329,7 @@ void scheduler(void) {
             break;
         }*/
     }
+    release(&ptable.lock);
 }
 
 // Print a process listing to console.  For debugging.
