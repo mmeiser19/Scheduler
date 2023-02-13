@@ -30,7 +30,7 @@ int local_scheduler() {
 }
 
 int main() {
-    srand(time(NULL));
+    srand(time(NULL));  //creates the seed for the random number generator
     pinit(); // initialize process table
     curr_proc_id = userinit(); // create first user process
     char cmd[MAX_COMMAND_LENGTH + 1];

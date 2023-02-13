@@ -289,7 +289,7 @@ void scheduler(void) {
         totaltickets = totaltickets + p->tickets;
     }
 
-    int winner = rand() % (totaltickets + 1);
+    int winner = rand() % (totaltickets + 1); // random number between 0 and totaltickets
     printf("Winner: %d, total tickets: %d\n", winner, totaltickets);
 
     int counter = 0;
