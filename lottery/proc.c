@@ -9,8 +9,14 @@
 #include "types.h"
 #include "defs.h"
 #include "proc.h"
+#include <time.h>
+#include <sys/syscall.h>
+#include <linux/random.h>
+#include <unistd.h>
+
 
 //#define NUMTICKETS 10000
+
 
 struct cpu cpus[NCPU];
 
@@ -295,8 +301,9 @@ void scheduler(void) {
     }
     release(&ptable.lock);*/
     //counter: used to track if we’ve found the winner yet
+    curr_proc->state = RUNNABLE;
     int counter = 0;
-
+    acquire(&ptable.lock);
     // winner: use some call to a random number generator to
     // get a value, between 0 and the total # of tickets
     struct proc *p;
@@ -304,17 +311,19 @@ void scheduler(void) {
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         totaltickets = totaltickets + p->tickets;
     }
+
     int winner = rand() % totaltickets;
     printf("Winner: %d, total tickets: %d\n", winner, totaltickets);
 
     // current: use this to walk through the list of jobs
-    acquire(&ptable.lock);
-    //struct proc *current = ptable.proc;
+    struct proc *current = ptable.proc;
 
     // for loop to walk through the array of processes
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         counter = counter + p->tickets;
+        // if the current process is the winner, make it the running process
         if (counter > winner) {
+            curr_proc = p;
             p->state = RUNNING;
             break;
         }
@@ -325,44 +334,6 @@ void scheduler(void) {
         }*/
     }
 }
-
-/*void lottery(void) {
-    //counter: used to track if we’ve found the winner yet
-    int counter = 0;
-    // winner: use some call to a random number generator to
-    // get a value, between 0 and the total # of tickets
-    struct proc *p;
-    int totaltickets = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        totaltickets = totaltickets + p->tickets;
-    }
-    int winner = getrandom(0, NUMTICKETS);
-    // current: use this to walk through the list of jobs
-    acquire(&ptable.lock);
-    struct proc *current = ptable.proc;
-    // for loop to walk through the array of processes
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-        counter = counter + p->tickets;
-        if (counter > winner) {
-            p->state = RUNNING;
-            break;
-        }
-        //if this is the last index, make this process the running one
-        if (p == &ptable.proc[NPROC - 1]) {
-            p->state = RUNNING;
-            break;
-        }
-    }
-    while (current) {
-        counter = counter + current->tickets;
-        if (counter > winner || current->next == 0) { //checks to see if the current process is the winner or the last one in the list
-            current->state = RUNNING;
-            break;
-        }
-        current = current->next;
-    }
-    // current is the winner: schedule it...
-}*/
 
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
