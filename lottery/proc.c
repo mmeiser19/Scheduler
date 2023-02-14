@@ -10,7 +10,7 @@
 #include "defs.h"
 #include "proc.h"
 
-//this is a comment, I made this in VIM
+//removing the test comment
 
 //#define NUMTICKETS 10000
 
