@@ -290,8 +290,6 @@ void scheduler(void) {
     }
 
     int winner = rand() % (totaltickets + 1); // random number between 0 and totaltickets
-    printf("Winner: %d, total tickets: %d\n", winner, totaltickets);
-
     int counter = 0;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
         counter = counter + p->tickets;
