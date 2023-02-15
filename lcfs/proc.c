@@ -34,12 +34,6 @@ static const int prio_to_weight[40] = {
     /* 15 */ 36, 29, 23, 18, 15,
 };
 
-int cmp(const void *a, const void *b) {
-    struct proc *p1 = (struct proc *)a;
-    struct proc *p2 = (struct proc *)b;
-    return p1->vruntime - p2->vruntime;
-}
-
 // enum procstate for printing
 char *procstatep[] = { "UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE" };
 
@@ -115,7 +109,8 @@ int userinit(void) {
     strcpy(p->name, "userinit");
     p->state = RUNNING;
     p->nice = 0;
-    p->weight = 1024; //nice value of 0 has weight of 1024
+    p->weight = prio_to_weight[20 + p->nice];
+    //p->weight = 1024; //nice value of 0 has weight of 1024
     p->vruntime = 0;
     curr_proc = p;
     return p->pid;
@@ -325,13 +320,12 @@ void scheduler(void) {
         }
     }
     int curr_weight = curr_proc->weight; //weight of the current process
-    int timeSlice = (curr_weight * sched_latency) / total_weight; //time slice for the current process
-    //used to determine how much time to decrement from remaining vruntime
-    if (timeSlice < min_granularity) {
+    int timeSlice = (curr_weight * sched_latency) / total_weight; //time slice given to the current process
+    if (timeSlice < min_granularity) { //checks if the time slice is less than the minimum granularity and adjusts it accordingly
         timeSlice = min_granularity;
     }
-    curr_proc->vruntime += timeSlice;
-    curr_proc->state = RUNNING;
+    curr_proc->vruntime += timeSlice; //updates the vruntime of the current process
+    curr_proc->state = RUNNING; //sets the state of the current process to running
     release(&ptable.lock);
 }
 
