@@ -1,0 +1,3 @@
+ps
+timer 10
+ps
