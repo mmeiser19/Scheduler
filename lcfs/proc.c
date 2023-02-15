@@ -23,6 +23,23 @@ void release(int *p) {
     return;
 }
 
+static const int prio_to_weight[40] = {
+    /* -20 */ 88761, 71755, 56483, 46273, 36291,
+    /* -15 */ 29154, 23254, 18705, 14949, 11916,
+    /* -10 */ 9548, 7620, 6100, 4904, 3906,
+    /* -5 */ 3121, 2501, 1991, 1586, 1277,
+    /* 0 */ 1024, 820, 655, 526, 423,
+    /* 5 */ 335, 272, 215, 172, 137,
+    /* 10 */ 110, 87, 70, 56, 45,
+    /* 15 */ 36, 29, 23, 18, 15,
+};
+
+int cmp(const void *a, const void *b) {
+    struct proc *p1 = (struct proc *)a;
+    struct proc *p2 = (struct proc *)b;
+    return p1->vruntime - p2->vruntime;
+}
+
 // enum procstate for printing
 char *procstatep[] = { "UNUSED", "EMBRYO", "SLEEPING", "RUNNABLE", "RUNNING", "ZOMBIE" };
 
@@ -97,7 +114,9 @@ int userinit(void) {
     strcpy(p->cwd, "/");
     strcpy(p->name, "userinit");
     p->state = RUNNING;
-    p->weight = 1024;
+    p->nice = 0;
+    p->weight = 1024; //nice value of 0 has weight of 1024
+    p->vruntime = 0;
     curr_proc = p;
     return p->pid;
 }
@@ -126,7 +145,13 @@ int Fork(int fork_proc_id) {
     pid = np->pid;
     np->state = RUNNABLE;
     strcpy(np->name, fork_proc->name);
-    np->weight = fork_proc->weight;
+
+    //generate a nice value to give us the weight of the new process
+    int nice = rand() % 40;
+    int weight = prio_to_weight[nice];
+    np->nice = nice - 20;
+    np->weight = weight;
+    np->vruntime = 0;
     return pid;
 }
 
@@ -274,28 +299,9 @@ int Kill(int pid) {
 //  - eventually that process transfers control
 //      via switch back to the scheduler.
 void scheduler(void) {
-// A continuous loop in real code
-//  if(first_sched) first_sched = 0;
-//  else sti();
-
     curr_proc->state = RUNNABLE;
-
     struct proc *p;
 
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p == curr_proc || p->state != RUNNABLE)
-            continue;
-
-        // Switch to chosen process.
-        curr_proc = p;
-        p->state = RUNNING;
-        break;
-    }
-    release(&ptable.lock);
-}
-
-void lcfs(void) {
     int sched_latency = 48; //milliseconds
     int min_granularity = 6; //milliseconds
     acquire(&ptable.lock);
@@ -307,14 +313,26 @@ void lcfs(void) {
             total_weight += ptable.proc[i].weight;
         }
     }
-
+    //get process with the lowest vruntime
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+        if (curr_proc->vruntime > p->vruntime && p->pid != 0) {
+            curr_proc = p;
+        }
+        else if (curr_proc->vruntime == p->vruntime && p->pid != 0) {
+            if (curr_proc->nice > p->nice) {
+                curr_proc = p;
+            }
+        }
+    }
     int curr_weight = curr_proc->weight; //weight of the current process
     int timeSlice = (curr_weight * sched_latency) / total_weight; //time slice for the current process
     //used to determine how much time to decrement from remaining vruntime
-    //once vruntime <= 0, the process is removed since it has been fully completed
     if (timeSlice < min_granularity) {
         timeSlice = min_granularity;
     }
+    curr_proc->vruntime += timeSlice;
+    curr_proc->state = RUNNING;
+    release(&ptable.lock);
 }
 
 // Print a process listing to console.  For debugging.
@@ -325,5 +343,5 @@ void procdump(void) {
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
         if(p->pid > 0)
-            printf("pid: %d, parent: %d state: %s\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state]);
+            printf("pid: %d, parent: %d state: %s, nice value: %d, vruntime: %d ms\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->nice, p->vruntime);
 }

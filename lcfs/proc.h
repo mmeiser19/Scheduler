@@ -61,4 +61,6 @@ struct proc {
     char cwd[CWD];               // Current directory
     char name[PNAME];            // Process name (debugging)
     int weight;                  // Weight of process
+    int nice;                    // Nice value of process
+    int vruntime;                // Virtual runtime of process
 };

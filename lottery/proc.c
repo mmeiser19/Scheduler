@@ -19,6 +19,8 @@ struct cpu cpus[NCPU];
 
 static void wakeup1(int chan);
 
+static int tickets = 10;
+
 // Dummy lock routines. Not needed for lab
 void acquire(int *p) {
     return;
@@ -102,7 +104,7 @@ int userinit(void) {
     strcpy(p->cwd, "/");
     strcpy(p->name, "userinit");
     p->state = RUNNING;
-    p->tickets = 100;
+    p->tickets = 50;
     curr_proc = p;
     return p->pid;
 }
@@ -131,8 +133,8 @@ int Fork(int fork_proc_id) {
     pid = np->pid;
     np->state = RUNNABLE;
     strcpy(np->name, fork_proc->name);
-    np->tickets = fork_proc->tickets;
-    //allocateTickets();
+    np->tickets = tickets;
+    tickets = tickets + 10;
     return pid;
 }
 
@@ -268,7 +270,6 @@ int Kill(int pid) {
             return 0;
         }
     }
-    //allocateTickets();
     release(&ptable.lock);
     return -1;
 }
@@ -319,23 +320,3 @@ void procdump(void) {
         if(p->pid > 0)
             printf("pid: %d, parent: %d state: %s, tickets: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets);
 }
-
-/*void allocateTickets() {
-    struct proc *p;
-    acquire(&ptable.lock);
-    //assign every process a value between 1 and 5 based on priority, used to determine # of tickets each process receives
-    //each process receives a certain number of tickets based on how many processes there are
-    //more processes = each process gets fewer tickets
-    //higher priority also gives more tickets (more likely to be chosen)
-    //int random = getrandom(1, 5);
-    //go through all processes and get the sum of their priority values
-    double totalPriority = 0;
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        totalPriority = totalPriority + p->priority;
-    }
-    //for each process, divide their priority by the total priority to get a percentage; the % of tickets they should receive
-    //multiply that percentage by the total # of tickets to get the # of tickets they should receive
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-        p->tickets = (p->priority / totalPriority) * NUMTICKETS;
-    }
-}*/
