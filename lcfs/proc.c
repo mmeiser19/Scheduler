@@ -319,12 +319,14 @@ void scheduler(void) {
             }
         }
     }
-    int curr_weight = curr_proc->weight; //weight of the current process
-    int timeSlice = (curr_weight * sched_latency) / total_weight; //time slice given to the current process
+    int timeSlice = (curr_proc->weight * sched_latency) / total_weight; //time slice given to the current process
     if (timeSlice < min_granularity) { //checks if the time slice is less than the minimum granularity and adjusts it accordingly
         timeSlice = min_granularity;
     }
-    curr_proc->vruntime += timeSlice; //updates the vruntime of the current process
+    double defaultWeight = 1024; //default weight of a process; nice value of 0
+    double calcWeight = defaultWeight/curr_proc->weight;
+    int vruntime = curr_proc->vruntime + calcWeight * timeSlice; //calculates the vruntime of the current process
+    curr_proc->vruntime += vruntime; //updates the vruntime of the current process
     curr_proc->state = RUNNING; //sets the state of the current process to running
     release(&ptable.lock);
 }
