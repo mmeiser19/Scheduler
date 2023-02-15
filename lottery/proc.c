@@ -291,7 +291,7 @@ void scheduler(void) {
         totaltickets = totaltickets + p->tickets;
     }
 
-    int winner = rand() % (totaltickets + 1); // random number between 0 and totaltickets
+    int winner = rand() % (totaltickets + 1); // generates a random number that determines the winner
     int counter = 0;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
         counter = counter + p->tickets;
@@ -316,7 +316,13 @@ void scheduler(void) {
 void procdump(void) {
     struct proc *p;
 
+    //calculates the total number of tickets to give us the percentage of tickets each process has
+    int totaltickets = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        totaltickets = totaltickets + p->tickets;
+    }
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
         if(p->pid > 0)
-            printf("pid: %d, parent: %d state: %s, tickets: %d\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets);
+            printf("pid: %d, parent: %d state: %s, tickets: %d, percentage of tickets: %d%%\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets, p->tickets * 100 / totaltickets);
 }
