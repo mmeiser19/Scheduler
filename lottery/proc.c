@@ -324,5 +324,5 @@ void procdump(void) {
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
         if(p->pid > 0)
-            printf("pid: %d, parent: %d state: %s, tickets: %d, percentage of tickets: %d%%\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets, p->tickets * 100 / totaltickets);
+            printf("pid: %d, parent: %d state: %s, tickets: %d, percentage of tickets: %d%\n", p->pid, p->parent == 0 ? 0 : p->parent->pid, procstatep[p->state], p->tickets, p->tickets * 100 / totaltickets);
 }
