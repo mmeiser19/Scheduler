@@ -292,7 +292,7 @@ void scheduler(void) {
     }
 
     int winner = rand() % (totaltickets + 1); // generates a random number that determines the winner
-    int counter = 0;
+    int counter = 0;  //counts the number of tickets we have seen so far while iterating through each process
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
         counter = counter + p->tickets;
         // if the current process is the winner, make it the running process
