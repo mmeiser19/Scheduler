@@ -1,0 +1,3 @@
+fork
+ps
+timer 10
