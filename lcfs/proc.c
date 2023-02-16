@@ -310,10 +310,10 @@ void scheduler(void) {
     }
     //get process with the lowest vruntime
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-        if (curr_proc->vruntime > p->vruntime && p->pid != 0) {
+        if (curr_proc->vruntime > p->vruntime && p->pid != 0 && curr_proc->state != SLEEPING) {
             curr_proc = p;
         }
-        else if (curr_proc->vruntime == p->vruntime && p->pid != 0) {
+        else if (curr_proc->vruntime == p->vruntime && p->pid != 0 && curr_proc->state != SLEEPING) {
             if (curr_proc->nice > p->nice) {
                 curr_proc = p;
             }
@@ -323,10 +323,9 @@ void scheduler(void) {
     if (timeSlice < min_granularity) { //checks if the time slice is less than the minimum granularity and adjusts it accordingly
         timeSlice = min_granularity;
     }
-    double defaultWeight = 1024; //default weight of a process; nice value of 0
-    double calcWeight = defaultWeight/curr_proc->weight;
-    int vruntime = curr_proc->vruntime + calcWeight * timeSlice; //calculates the vruntime of the current process
-    curr_proc->vruntime += vruntime; //updates the vruntime of the current process
+    int defaultWeight = 1024; //default weight of a process; nice value of 0
+    //calculates the additional vruntime of the current process and ads it to the process's current vruntime
+    curr_proc->vruntime = curr_proc->vruntime + (double) defaultWeight/curr_proc->weight* timeSlice;
     curr_proc->state = RUNNING; //sets the state of the current process to running
     release(&ptable.lock);
 }
