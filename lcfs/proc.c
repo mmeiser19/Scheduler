@@ -310,10 +310,11 @@ void scheduler(void) {
     }
     //get process with the lowest vruntime
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-        if (curr_proc->vruntime > p->vruntime && p->pid != 0 && curr_proc->state != SLEEPING) {
+        int state = p->state;
+        if (curr_proc->vruntime > p->vruntime && p->pid != 0 && (state == RUNNABLE || state == RUNNING)) {
             curr_proc = p;
         }
-        else if (curr_proc->vruntime == p->vruntime && p->pid != 0 && curr_proc->state != SLEEPING) {
+        else if (curr_proc->vruntime == p->vruntime && p->pid != 0 && (state == RUNNABLE || state == RUNNING)) {
             if (curr_proc->nice > p->nice) {
                 curr_proc = p;
             }
