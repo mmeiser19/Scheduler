@@ -295,13 +295,8 @@ void scheduler(void) {
     int counter = 0;  //counts the number of tickets we have seen so far while iterating through each process
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
         counter = counter + p->tickets;
-        int state = p->state;
         // if the current process is the winner, make it the running process
-        /*if (state == SLEEPING) {
-            continue;
-        }*/
         if (counter > winner && p->pid != 0 && (p->state == RUNNABLE || p->state == RUNNING)) {
-            //make it so that only processes listed as runnable or running can be selected
             curr_proc = p;
             p->state = RUNNING;
             break;
